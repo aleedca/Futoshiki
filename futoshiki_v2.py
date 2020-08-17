@@ -1501,14 +1501,17 @@ def configuracion():
     radioboton1 = Radiobutton(ventana_config,text="Fácil",font = (None,10),variable = var1, value = 1)
     radioboton2 = Radiobutton(ventana_config,text="Intermedio",font = (None,10),variable = var1, value = 2)
     radioboton3 = Radiobutton(ventana_config,text="Difícil",font = (None,10),variable = var1 , value = 3)
+    radioboton4 = Radiobutton(ventana_config,text="Multinivel",font = (None,10),variable = var1 , value = 4)
 
     radioboton1.config(bg = main_color)
     radioboton2.config(bg = main_color)
     radioboton3.config(bg = main_color)
+    radioboton4.config(bg = main_color)
     
     radioboton1.place(x=40,y=70)
     radioboton2.place(x=40,y=95)
     radioboton3.place(x=40,y=120)
+    radioboton4.place(x=40,y=145)
 
     # reloj o timer
     mensaje2 = Message(ventana_config,text="Reloj\n")
@@ -1581,6 +1584,7 @@ def configuracion():
         
     if var3.get() == 0:
         var3.set(1)
+
         
     ventana_config.mainloop()
 
