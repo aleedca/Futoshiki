@@ -1,4 +1,5 @@
 from tkinter import messagebox
+from fpdf import FPDF
 from tkinter import *
 import os.path as path
 import pickle
@@ -59,6 +60,8 @@ paused = False
 click = False
 expirado = False
 guardado = False
+multinivel = False
+global nivel
 
 # cantidad de partidas en cada lista de nivel
 max_facil = len(lista_facil)-1
@@ -82,6 +85,7 @@ global minutos
 global horas
 global s2,m2,h2
 global timer_string
+global proceso_string
 
 # variables para obtener el valor de los radiobutton(configuracion)
 global var1,var2,var3,n
@@ -94,12 +98,16 @@ global b_borrar2
 global b_guardar
 global b_cargar
 global b_devolverse
+global b_rehacer
+global b_solucion
+global b_posibles_jugadas
 
 # variable para obtener la partida
 global partida
 global listaBotones,listaDigitos,lista_partida
 global digito,index
-lista_movimientos = []
+global lista_movimientos
+global jugadas_borradas
 
 # Colores y fonts
 
@@ -120,9 +128,9 @@ def jugar():
     global n
     global indicador,expirado
     global ventana_jugar
-    global b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_iniciar,b_devolverse
+    global b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_iniciar,b_devolverse,b_rehacer,b_solucion,b_posibles_jugadas
     global s,m,h
-    global s2,m2,h2
+    global s2,m2,h2,nivel
 
     expirado = False
     if not indicador:
@@ -142,71 +150,99 @@ def jugar():
         principal.withdraw()
         ventana_jugar = Tk()
         ventana_jugar.title("Jugar")
-        ventana_jugar.geometry('700x800+600+100')
+        ventana_jugar.geometry('850x850+500+80')
         ventana_jugar.resizable(width = False,height = False)
         ventana_jugar.config(background = main_color)
 
-        label = Label(ventana_jugar, text = "FUTOSHIKI",fg = color2,bg = main_color,font=('System', 28)).place(x=250,y=10)
+        label = Label(ventana_jugar, text = "FUTOSHIKI",fg = color2,bg = main_color,font=('System', 28)).pack(pady=10)
         label2 = Label(ventana_jugar,text="Nombre del jugador:",fg = color3,bg = main_color,
-                            font =('System',10)).place(x=165,y=120)
+                            font =('System',10)).place(x=250,y=120)
 
         n = Entry(ventana_jugar)
-        n.place(x=340,y=123,width = '200')
+        n.place(x=420,y=123,width = '200')
 
+        
         b_iniciar = Button(ventana_jugar,text="Iniciar juego",width = 12, bg = color2,command = lambda:iniciar(n.get()))
-        b_iniciar.place(x=30,y=660)
+        b_iniciar.place(x=300,y=660)
+
+        label_pj = Label(ventana_jugar,text="Posibles jugadas:",font=(None,12),bg=main_color)
+        label_pj.place(x=50,y=680)
+        b_posibles_jugadas = Button(ventana_jugar,text="Posibles jugadas", width = 12, bg = color2,state="disable")
+        b_posibles_jugadas.place(x=300,y=730)
         
         b_borrar1 = Button(ventana_jugar,text="Borrar jugada", width = 12, command = borrar_jugada,bg = color2,state="disable")
         b_terminar = Button(ventana_jugar,text="Terminar juego", width = 12, command = terminar_juego, bg = color2,state="disable")
         b_borrar2 = Button(ventana_jugar,text="Borrar juego", width = 12,command = borrar_juego,bg = color2,state="disable") 
         b_top = Button(ventana_jugar,text="TOP 10", width = 12, command = top10_ventana, bg = color2)
         b_devolverse = Button(ventana_jugar,text="Volver a menú principal", width = 18, command = volver2, bg = color2)
-
-        b_borrar1.place(x=165,y=660)
-        b_terminar.place(x=300,y=660)
+        b_rehacer = Button(ventana_jugar,text="Rehacer jugada", width = 12, command = rehacer_jugada, bg = color2,state="disable")
+        b_solucion = Button(ventana_jugar,text="Solucionar juego", width = 14, command = solucion_juego, bg = color2,state="disable")
+        
+        b_borrar1.place(x=420,y=730)
+        b_terminar.place(x=570,y=660)
         b_borrar2.place(x=435,y=660)
-        b_top.place(x=570,y=660)
-        b_devolverse.place(x=520,y=730)
+        b_devolverse.place(x=660,y=800)
+        b_rehacer.place(x=555,y=730)
+        b_top.place(x=705,y=660)
+        b_solucion.place(x=690,y=730)
 
         b_guardar = Button(ventana_jugar,text="Guardar juego",width = 12, command = guardar, bg = color2,state="disable")
         b_cargar = Button(ventana_jugar,text="Cargar juego",width = 12, bg = color2, command = cargar, state="normal")
 
-        b_guardar.place(x=250,y=730)
-        b_cargar.place(x=385,y=730)
+        b_guardar.place(x=390,y=800)
+        b_cargar.place(x=525,y=800)
 
         if modo == 1:
-            nivel = Label(ventana_jugar,text="Nivel: Fácil",bg = main_color, font = ('System',11))
-            nivel.place(x=310,y=65)
+            nivel = Label(ventana_jugar,text="Nivel: Fácil",bg = main_color, font = ("Helvetica",14))
+            nivel.pack()
             
         if modo == 2:
-            nivel = Label(ventana_jugar,text="Nivel: Intermedio",bg = main_color, font = ('System',11))
-            nivel.place(x=300,y=65)
+            nivel = Label(ventana_jugar,text="Nivel: Intermedio",bg = main_color, font = ("Helvetica",14))
+            nivel.pack()
             
         if modo == 3:
-            nivel = Label(ventana_jugar,text="Nivel: Difícil",bg = main_color, font = ('System',11))
-            nivel.place(x=309,y=65)
+            nivel = Label(ventana_jugar,text="Nivel: Difícil",bg = main_color, font = ("Helvetica",14))
+            nivel.pack()
+
+        if modo == 4:
+            nivel = Label(ventana_jugar,text="Nivel: Multinivel",bg = main_color, font = ("Helvetica",14))
+            nivel.pack()
         
         ventana_jugar.mainloop()
 
 
 def iniciar(var_n):
     global nombre
-    global b_iniciar,b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_devolverse
+    global b_iniciar,b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_devolverse,b_posibles_jugadas
     global partida
     global indicador2,guardado
-
+    global modo,multinivel
     
     guardado = False
     indicador2 = True
 
+    frame = Frame(ventana_jugar,bg=color4)
+    label_fila = Label(frame,text="Fila casilla",bg=color4,font=(None,11))
+    label_fila.grid(row=0,column=0)
+    entry_pj1 = Entry(frame,width = 6)
+    entry_pj1.grid(row=0,column=1)
+    label_col = Label(frame,text="Columna casilla",bg=color4,font=(None,11))
+    label_col.grid(row=1,column=0)
+    entry_pj2 = Entry(frame,width = 6)
+    entry_pj2.grid(row=1,column=1)
+
+    frame.place(x=45,y=740)
+    
     nombre = var_n
     if nombre == "":
         messagebox.showerror("Error",message = "Ingrese el nombre del jugador antes de iniciar")
     elif len(nombre)>20:
         messagebox.showerror("Error",message = "Nombre debe tener entre 1-20 caracteres")
     else:
+        
         label_nombre = Label(ventana_jugar,text=nombre) # esconde el entry
-        label_nombre.place(x=340,y=123,width = '200')
+        label_nombre.place(x=420,y=123,width = '200')
+        label_nuevo = Label(ventana_jugar,text="",font=(None,12),bg = main_color,fg='blue')
 
         # cambia el estado de los botones al iniciar juego
         b_iniciar['state'] = 'disable'
@@ -216,7 +252,15 @@ def iniciar(var_n):
         b_guardar['state'] = 'normal'
         b_cargar['state'] = 'disable'
         b_devolverse['state'] = 'disable'
-        
+        b_rehacer['state'] = 'normal'
+        b_solucion['state'] = 'normal'
+        b_posibles_jugadas['state'] = 'normal'
+        b_posibles_jugadas['command'] = lambda:posibles_jugadas(entry_pj1,entry_pj2,entry_pj1.get(),entry_pj2.get(),label_nuevo)
+
+        if modo == 4:
+            modo = 1
+            multinivel = True
+            
         if modo == 1:
             if lista_facil == []:
                 messagebox.showerror("Error",message="No hay partidas para este nivel")
@@ -251,7 +295,7 @@ def iniciar(var_n):
 def relojes():
     global segundos,minutos,horas
     global s,m,h
-    global s2,m2,h2,timer_string
+    global s2,m2,h2,timer_string,proceso_string
     global paused
     global clock_label,timer_label
     
@@ -262,7 +306,7 @@ def relojes():
         label.grid(row=0)
         clock_label = Label(frame,bg = main_color,width=20, font=("","12"))
         clock_label.grid(row=1)
-        frame.place(x=-30,y=720)
+        frame.place(x=-40,y=12)
         frame.config(bg=main_color)
 
         if expirado:
@@ -272,6 +316,19 @@ def relojes():
             clock()
         else:
             clock()
+
+        if multinivel:
+            pr_s = int(proceso[-2:])
+            pr_m = int(proceso[-5:-3])
+            pr_h = int(proceso[:-6])
+
+            if pr_s<10:
+                pr_s = '0'+str(pr_s)
+            if pr_m<10:
+                pr_m = '0'+str(pr_m)
+            if pr_h<10:
+                pr_h = '0'+str(pr_h)
+            proceso_string = str(pr_h)+":"+str(pr_m)+":"+str(pr_s)
         
     if reloj == 2: 
         paused = False
@@ -305,7 +362,7 @@ def relojes():
         label.grid(row=0)
         timer_label = Label(frame,bg = main_color,width=20, font=("","12"))
         timer_label.grid(row=1)
-        frame.place(x=-30,y=720)
+        frame.place(x=-40,y=12)
         frame.config(bg=main_color)
         timer()
 
@@ -475,6 +532,8 @@ def crear_partida():
     global listaBotones
     global listaDigitos
     global lista_partida
+    global lista_movimientos
+    global jugadas_borradas
 
     frame = Frame(ventana_jugar)
 
@@ -527,7 +586,8 @@ def crear_partida():
              [0,0,0,0,0],
              [0,0,0,0,0]]
 
-    
+    lista_movimientos = []
+    jugadas_borradas = []
     lista_operador_pos = []
     listaDigitos = []
     
@@ -548,11 +608,11 @@ def crear_partida():
     # coloca la posicion del frame digitos segun configuracion
     if pos==1: # derecha
         frame.config(bg=color4,borderwidth=2,relief="solid")
-        frame.place(x=585,y=210)
+        frame.place(x=700,y=230)
         
     if pos==2: # izquierda
         frame.config(bg=color4,borderwidth=2,relief="solid")
-        frame.place(x=40,y=210)
+        frame.place(x=100,y=230)
 
 
     # crea lista de comparadores y coloca los comparadores segun la partida
@@ -563,8 +623,8 @@ def crear_partida():
             lista_comparadores.append((casilla[0],casilla[1],casilla[2]))
 
 
-    f2 = 215
-    c2 = 190
+    f2 = 305
+    c2 = 208
     for i in range(5):
         for j in range(5):
             for comparador in lista_comparadores: 
@@ -591,7 +651,7 @@ def crear_partida():
                         lista_operador_pos.append((comparador[0],(comparador[1],comparador[2]),(comparador[1]+1,comparador[2])))
             f2 += 85
         c2 += 85
-        f2 = 215
+        f2 = 305
 
     # agrega los numeros fijos a la lista de partida y a la copia de la misma
     for i in range(5):
@@ -602,8 +662,8 @@ def crear_partida():
                     copia[i][j] = int(casilla[0])
             
     # coloca los botones con su numero fijo segun la partida
-    f = 158
-    c = 180
+    f = 248
+    c = 198
     for i in range(5):
         for j in range(5):
             listaBotones[i][j]['command'] = lambda a=i,b=j : click_cuadricula(a,b,lista_operador_pos,copia)
@@ -613,11 +673,10 @@ def crear_partida():
                     listaBotones[i][j]['text'] = casilla[0] 
             f += 85
         c += 85
-        f = 158
+        f = 248
 
 
 def crear_partida_guardada():
-    print(partida)
     global listaBotones
     global listaDigitos
     global lista_partida
@@ -688,11 +747,11 @@ def crear_partida_guardada():
     # coloca la posicion del frame digitos segun configuracion
     if pos==1: # derecha
         frame.config(bg=color4,borderwidth=2,relief="solid")
-        frame.place(x=585,y=210)
+        frame.place(x=700,y=230)
         
     if pos==2: # izquierda
         frame.config(bg=color4,borderwidth=2,relief="solid")
-        frame.place(x=40,y=210)
+        frame.place(x=100,y=230)
 
 
     # crea lista de comparadores y coloca los comparadores segun la partida
@@ -703,8 +762,8 @@ def crear_partida_guardada():
             lista_comparadores.append((casilla[0],casilla[1],casilla[2]))
 
 
-    f2 = 215
-    c2 = 190
+    f2 = 305
+    c2 = 208
     for i in range(5):
         for j in range(5):
             for comparador in lista_comparadores: 
@@ -731,12 +790,12 @@ def crear_partida_guardada():
                         lista_operador_pos.append((comparador[0],(comparador[1],comparador[2]),(comparador[1]+1,comparador[2])))
             f2 += 85
         c2 += 85
-        f2 = 215
+        f2 = 305
 
     # agrega los numeros fijos a la copia de la misma y los coloca en los botones segun la partida
 
-    f = 158
-    c = 180
+    f = 248
+    c = 198
     for i in range(5):
         for j in range(5):
             listaBotones[i][j]['command'] = lambda a=i,b=j : click_cuadricula(a,b,lista_operador_pos,copia)
@@ -747,7 +806,7 @@ def crear_partida_guardada():
                     listaBotones[i][j]['text'] = casilla[0]
             f += 85     
         c += 85
-        f = 158
+        f = 248
 
 
     # coloca los movimientos guardados en los botones
@@ -830,7 +889,6 @@ def click_cuadricula(x,y,operadores,copia): # valida cada movimiento
             # 1 incumpla mayor
             # 2 incumple menor
             if copia[x][y] == 0: #copia para que me deje cambiarlo
-                
                 if restricciones == []:
                     lista_partida[x][y] = digito
                     listaBotones[x][y]['text'] = str(digito)
@@ -952,7 +1010,7 @@ def revision():
 
 
 def borrar_jugada():
-    global listaBotones,lista_partida,lista_movimientos
+    global listaBotones,lista_partida,lista_movimientos,jugadas_borradas
     global paused
 
     if lista_movimientos == []:
@@ -961,6 +1019,7 @@ def borrar_jugada():
         pausas()
     else:
         jugada = lista_movimientos.pop()
+        jugadas_borradas.append(jugada)
         x = jugada[1] # fila
         y = jugada[2] # columna
 
@@ -971,16 +1030,19 @@ def borrar_jugada():
 def terminar_juego(): 
     global max_facil,max_inter,max_dificil
     global lista_facil,lista_inter,lista_dif
-    global partida
+    global partida,modo
     global paused
     global s,m,h
     global segundos,minutos,horas
     global indicador2,indicador3,indicador4,indicador5
+    global lista_movimientos,jugadas_borradas
 
     partida_anterior = partida
 
     paused = True
     indicador2 = False
+    lista_movimientos = []
+    jugadas_borradas = []
     
     respuesta = messagebox.askquestion(title="Confirmación",message="¿Desea terminar el juego?")
     if respuesta == "yes":
@@ -991,7 +1053,7 @@ def terminar_juego():
             segundos = s2
             minutos = m2
             horas = h2
-            
+    
         if modo == 1:
             if max_facil>0:
                 if partida in lista_facil:
@@ -1024,8 +1086,10 @@ def terminar_juego():
                     indicador5 = True
                     max_dificil += 1
                     lista_dif.append(partida_anterior)
-        
 
+        if multinivel:
+            modo = 4
+        
         ventana_jugar.withdraw()
         jugar()
         
@@ -1035,8 +1099,9 @@ def terminar_juego():
 
 def borrar_juego():
     global listaBotones,lista_partida,lista_movimientos
-    global paused
+    global paused,jugadas_borradas
 
+    jugadas_borradas = []
     paused = True
     respuesta = messagebox.askquestion(title="Confirmación",message="¿Desea borrar el juego?")
     pausas()
