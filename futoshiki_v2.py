@@ -1672,21 +1672,30 @@ def salir():
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # ventana principal
-label_nombre_juego = Label(principal, text = "FUTOSHIKI") # podria agregar una imagen
+label_nombre_juego = Label(principal, text = "FUTOSHIKI")
 label_nombre_juego.config(font = main_titulo_font)
-label_nombre_juego.pack(pady = 100)
+label_nombre_juego.pack(pady = 50)
 label_nombre_juego.config(bg = main_color)
 
+imagen = PhotoImage(file = 'futoshiki2.png')
+label_img = Label(principal,image=imagen)
+label_img.place(x=280,y=150)
 
-principal.geometry('700x800+600+100') # ventana se abre en el centro de la pantalla buscar codigo en fotos
+
+principal.geometry('850x850+500+80') # ventana se abre en el centro de la pantalla buscar codigo en fotos
 principal.title("Principal")
 principal.configure(background = main_color)
 principal.resizable(width = False,height = False)
 
-b_jugar = Button(principal,text = "Jugar",command= jugar,font = button_main_font,bg = color2,width = 12,height = 2).pack(pady= 10)
-b_config = Button(principal,text = "Configuración",command = configuracion,font = button_main_font,bg = color2,width = 12,height = 2).pack(pady= 10)
-b_acercade = Button(principal,text = "Acerca de",command = acercade,font = button_main_font,bg=color2,width = 12,height = 2).pack(pady= 10)
-b_ayuda = Button(principal,text = "Ayuda",command = ayuda,font = button_main_font,bg = color2,width = 12,height = 2).pack(pady= 10)
-b_salir = Button(principal,text = "Salir",command = salir,font = button_main_font,bg = color2,width = 12,height = 2).pack(pady= 10)
+b_jugar = Button(principal,text = "Jugar",command= jugar,font = button_main_font,bg = color2,width = 12,height = 2)
+b_jugar.place(x=275,y=510)
+b_config = Button(principal,text = "Configuración",command = configuracion,font = button_main_font,bg = color2,width = 12,height = 2)
+b_config.place(x=445,y=510)
+b_acercade = Button(principal,text = "Acerca de",command = acercade,font = button_main_font,bg=color2,width = 12,height = 2)
+b_acercade.place(x=275,y=610)
+b_ayuda = Button(principal,text = "Ayuda",command = ayuda,font = button_main_font,bg = color2,width = 12,height = 2)
+b_ayuda.place(x=445,y=610)
+b_salir = Button(principal,text = "Salir",command = salir,font = button_main_font,bg = color2,width = 12,height = 2)
+b_salir.place(x=360,y=710)
 
 principal.mainloop()
