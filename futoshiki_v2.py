@@ -291,7 +291,7 @@ def iniciar(var_n):
                 relojes()
                 crear_partida()
 
-
+            
 def relojes():
     global segundos,minutos,horas
     global s,m,h
@@ -1134,8 +1134,9 @@ def rehacer_jugada():
         lista_movimientos.append(jugada)
     else:
         messagebox.showerror(title="Error", message="No hay jugadas para rehacer")
-        
-                
+    
+
+
 def solucion_juego():
     print('sirve')
     #backtracking
@@ -1215,8 +1216,8 @@ def posibles_jugadas(e1,e2,fila,columna,label_nuevo):
             # limpia los entries
             e1.delete(0,END)
             e2.delete(0,END)
-            
 
+    
 def gana_partida():
     global modo,multinivel
     
@@ -1233,7 +1234,7 @@ def gana_partida():
             multinivel = False
     else:
         volver2()
-    
+
 
 def ganar():
     global max_facil,max_inter,max_dificil
@@ -1579,7 +1580,7 @@ def top10_ventana():
     b_imprimir.place(x=545,y=680)
 
     ventana_top.mainloop()
-    
+
 
 def posicion_label(f,c,nivel):
     # coloca los numeros del top en la ventana
@@ -1589,7 +1590,7 @@ def posicion_label(f,c,nivel):
         c += 20
         if i == len(nivel):
             break
-   
+
 
 def imprimir_top():
     #crea un archivo pdf del top10 de cada nivel
@@ -1723,8 +1724,9 @@ def agrega_pagina_formato(file):
     file.set_font('Arial','B',16)
     file.text(85,20,'Top 10 Futoshiki')
     file.ln(20) # line break
-    
-    
+
+
+  
 def volver3(): 
     global paused
     paused = False
@@ -1926,6 +1928,8 @@ def iniciar2(label):
     
     relojes()
     crear_partida_guardada()
+
+
     
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
