@@ -1416,9 +1416,9 @@ def cargar():
     global nombre,modo,reloj,pos
     global s,m,h
     global segundos,minutos,horas
-    global partida,lista_partida,lista_movimientos
+    global partida,lista_partida,lista_movimientos,jugadas_borradas
     global b_iniciar,b_cargar
-    global guardado
+    global guardado,modo
 
     if path.exists("futoshiki2020juegoactual.dat"): # retorna True si el archivo existe
         archivo = open("futoshiki2020juegoactual.dat","rb")
@@ -1436,6 +1436,7 @@ def cargar():
         partida = pickle.load(archivo)
         lista_partida = pickle.load(archivo)
         lista_movimientos = pickle.load(archivo)
+        jugadas_borradas = pickle.load(archivo)
         
         archivo.close()
         
@@ -1444,21 +1445,53 @@ def cargar():
         b_iniciar['command'] = lambda:iniciar2(label_load)
         b_cargar['state'] = 'disable'
         label_nombre = Label(ventana_jugar,text=nombre) # esconde el entry tapandolo
-        label_nombre.place(x=340,y=123,width = '200')
-        label_load.place(x=150,y=350)
+        label_nombre.place(x=420,y=123,width = '200')
+        label_load.place(x=225,y=350)
         
 
     else:
-        messagebox.showerror(title="Error",message="No hay ninguna partida guardada")
+        messagebox.showerror(title="Error",message="No hay partida guardada")
 
 
 def iniciar2(label):
     global nombre
-    global b_iniciar,b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_devolverse
+    global b_iniciar,b_borrar1,b_terminar,b_borrar2,b_guardar,b_cargar,b_devolverse,b_rehacer,b_solucion,b_posibles_jugadas
     global max_facil,max_inter,max_dificil
-    global lista_facil,lista_inter,lista_dif
+    global lista_facil,lista_inter,lista_dif,nivel
 
     label.destroy()
+    nivel.destroy()
+
+    frame = Frame(ventana_jugar,bg=color4)
+    label_fila = Label(frame,text="Fila casilla",bg=color4,font=(None,11))
+    label_fila.grid(row=0,column=0)
+    entry_pj1 = Entry(frame,width = 6)
+    entry_pj1.grid(row=0,column=1)
+    label_col = Label(frame,text="Columna casilla",bg=color4,font=(None,11))
+    label_col.grid(row=1,column=0)
+    entry_pj2 = Entry(frame,width = 6)
+    entry_pj2.grid(row=1,column=1)
+
+    frame.place(x=45,y=740)
+
+    label_nuevo = Label(ventana_jugar,text="",font=(None,12),bg = main_color,fg='blue')
+    
+    if modo == 1:
+        nivel = Label(ventana_jugar,text="Nivel: Fácil",bg = main_color, font = ("Helvetica",14))
+        nivel.pack()
+        
+    if modo == 2:
+        nivel = Label(ventana_jugar,text="Nivel: Intermedio",bg = main_color, font = ("Helvetica",14))
+        nivel.pack()
+        
+    if modo == 3:
+        nivel = Label(ventana_jugar,text="Nivel: Difícil",bg = main_color, font = ("Helvetica",14))
+        nivel.pack()
+
+    if modo == 4:
+        nivel = Label(ventana_jugar,text="Nivel: Multinivel",bg = main_color, font = ("Helvetica",14))
+        nivel.pack()
+        
     b_iniciar['command'] = lambda:iniciar(nombre)
         
     # cambia el estado de los botones al iniciar juego
@@ -1469,11 +1502,13 @@ def iniciar2(label):
     b_guardar['state'] = 'normal'
     b_cargar['state'] = 'disable'
     b_devolverse['state'] = 'disable'
+    b_rehacer['state'] = 'normal'
+    b_solucion['state'] = 'normal'
+    b_posibles_jugadas['state'] = 'normal'
+    b_posibles_jugadas['command'] = lambda:posibles_jugadas(entry_pj1,entry_pj2,entry_pj1.get(),entry_pj2.get(),label_nuevo)
     
     relojes()
     crear_partida_guardada()
-
-
     
     
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
