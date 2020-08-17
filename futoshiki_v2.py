@@ -1054,10 +1054,120 @@ def borrar_juego():
                 lista_movimientos = lista_movimientos[1:]
 
 
+def rehacer_jugada():
+    global jugadas_borradas
+    global lista_movimientos
+
+    if jugadas_borradas!=[]:
+        jugada = jugadas_borradas.pop()
+        dig = jugada[0]
+        x = jugada[1] # fila
+        y = jugada[2] # columna
+
+        listaBotones[x][y]['text'] = str(dig)
+        lista_partida[x][y] = dig
+        lista_movimientos.append(jugada)
+    else:
+        messagebox.showerror(title="Error", message="No hay jugadas para rehacer")
+        
+                
+def solucion_juego():
+    print('sirve')
+    #backtracking
+
+
+def posibles_jugadas(e1,e2,fila,columna,label_nuevo):
+    global paused
+    
+    if fila == "" or columna == "":
+        paused = True
+        messagebox.showerror(title="Error",message="Debe colocar la fila y la columna de la casilla")
+        pausas()
+
+    elif not fila.isdigit() or not columna.isdigit():
+        paused = True
+        messagebox.showerror(title="Error",message="Entradas deben ser numeros")
+        pausas()
+        e1.delete(0,END)
+        e2.delete(0,END)
+
+    else:
+        fila = int(fila)
+        columna = int(columna)
+        if not 1<=fila<=5 or not 1<=columna<=5:
+            paused = True
+            messagebox.showerror(title="Error",message="Número de fila y columna debe estar entre 1 y 5")
+            pausas()
+            
+        else:
+            fila -= 1
+            columna -= 1
+
+            if lista_partida[fila][columna]==0:
+                # crea lista de la columna segun donde se ubique la posicion dela casilla
+                cont = 0
+                f = []
+                c = []
+                while cont<len(lista_partida):
+                    elem = lista_partida[cont][columna]
+                    c.append(elem)
+                    cont+=1
+
+                # crea lista de posibles jugadas
+                posibles = []
+                f = lista_partida[fila]
+                for boton in listaDigitos:
+                    num = int(boton['text'])
+                    if num not in f and num not in c:
+                        posibles.append(num)
+
+                #si no hay posibles significa que la fila y la columna estan llenas
+                #de lo contrario se convertirá a string para agregarlo a un label
+                if posibles!=[]:
+                    nuevo = ""
+                    for num in posibles:
+                        num = str(num)
+                        nuevo+=num
+                        nuevo+=" "
+                        
+                    if label_nuevo['text'] == "":
+                        label_nuevo['text'] = nuevo
+                    else:
+                        label_nuevo['text'] = nuevo
+                    label_nuevo.place(x=95,y=705)
+                    # se deben tomar en cuenta los operadores????????????
+                    
+                else:
+                    paused = True
+                    messagebox.showinfo(title="Error",message="La casilla no tiene posibles jugadas")
+                    pausas()
+
+            else:
+                paused = True
+                messagebox.showinfo(title="Posibles jugadas",message="La casilla no tiene posibles jugadas")
+                pausas()
+            
+            # limpia los entries
+            e1.delete(0,END)
+            e2.delete(0,END)
+            
+
 def gana_partida():
+    global modo,multinivel
+    
     ganar()
-    volver2()
     datos_partida_arch()
+    
+    if multinivel:
+        modo = modo+1
+        if modo<3:
+            iniciar(nombre)
+        else:
+            modo = 3
+            iniciar(nombre)
+            multinivel = False
+    else:
+        volver2()
     
 
 def ganar():
@@ -1068,26 +1178,48 @@ def ganar():
     global segundos,minutos,horas
     global paused
     global indicador2,indicador3,indicador4,indicador5
+    global lista_movimientos,jugadas_borradas
 
     paused = True
     indicador2 = False
+    lista_movimientos = []
+    jugadas_borradas = []
 
     # muestra proceso dependiendo del reloj escogido antes de reestablecer variables
+
+    pr_s = int(proceso[-2:])
+    pr_m = int(proceso[-5:-3])
+    pr_h = int(proceso[:-6])
+    
     if reloj == 1 or reloj == 2: 
         # reestablece variables a su valor de inicio
-        s = 0
-        m = 0
-        h = 0
-        
+        if not multinivel:
+            s = 0
+            m = 0
+            h = 0
+        else:
+            pr2_s = int(proceso_string[-2:])
+            pr2_m = int(proceso_string[-5:-3])
+            pr2_h = int(proceso_string[:-6])
+
+            pr2_ss = pr2_s+(pr2_m*60)+(pr2_h*3600)
+            pr_ss = pr_s+(pr_m*60)+(pr_h*3600)
+
+            # resta de cuanto tiempo duró en completarlo
+            dif = abs(pr2_ss-pr_ss)
+
+            # proceso es actualizado al tiempo real que lo completó
+            proceso = time.strftime('%H:%M:%S',time.gmtime(dif))
+
+            s = pr_s
+            m = pr_m
+            h = pr_h
+            
     if reloj == 3:
         if not expirado:
             ts_s = int(timer_string[-2:])
             ts_m = int(timer_string[-5:-3])
             ts_h = int(timer_string[:-6])
-
-            pr2_s = int(proceso[-2:])
-            pr2_m = int(proceso[-5:-3])
-            pr2_h = int(proceso[:-6])
 
             # segundos de timer_string y proceso
             ts_ss = ts_s+(ts_m*60)+(ts_h*3600)
@@ -1100,12 +1232,19 @@ def ganar():
             proceso = time.strftime('%H:%M:%S',time.gmtime(dif))
             
             # reestablece variables a su valor de inicio
+        if not multinivel:
             segundos = s2
             minutos = m2
             horas = h2
+            
+        if multinivel:
+            segundos = pr2_s
+            minutos = pr2_m
+            horas = pr2_h
+                
 
     if modo == 1:
-        messagebox.showinfo(title="Partida completada",message="¡Excelente, buen trabajo!")
+        messagebox.showinfo(title="Partida fácil completada",message="¡Excelente, buen trabajo!")
         indicador3 = False
         if partida in lista_facil:
             if len(lista_facil)>1:
@@ -1117,7 +1256,7 @@ def ganar():
 
             
     if modo == 2:
-        messagebox.showinfo(title="Partida completada",message="¡Excelente, buen trabajo!")
+        messagebox.showinfo(title="Partida intermedio completada",message="¡Excelente, buen trabajo!")
         indicador4 = False
         if partida in lista_inter:
             if len(lista_inter)>1:
@@ -1127,7 +1266,7 @@ def ganar():
                 lista_inter.remove(lista_inter[0])
             
     if modo == 3:
-        messagebox.showinfo(title="Partida completada",message="¡Excelente, buen trabajo!")
+        messagebox.showinfo(title="Partida difícil completada",message="¡Excelente, buen trabajo!")
         indicador5 = False
         if partida in lista_dif:
             if len(lista_dif)>1:
@@ -1140,7 +1279,7 @@ def ganar():
 def datos_partida_arch():
     # guarda datos de nombre, modo, proceso y eso llega a top10 solo si ya gana partida
     
-    registro = (nombre,modo,proceso)
+    registro = (nombre,proceso)
 
     if not path.exists('futoshiki2020top10.dat'):
         facil = []
@@ -1171,13 +1310,73 @@ def datos_partida_arch():
         archivo.close()
 
         if modo == 1:
-            facil.append(registro)
+            for dato in facil:
+                ds = int(dato[1][-2:])
+                dm = int(dato[1][-5:-3])
+                dh = int(dato[1][:-6])
+
+                rs = int(registro[1][-2:])
+                rm = int(registro[1][-5:-3])
+                rh = int(registro[1][:-6])
+
+                # pasa a segundos los tiempos para cmompararlos
+                dss = ds+(dm*60)+(dh*3600)
+                rss = rs+(rm*60)+(rh*3600)
+
+                if rss<=dss:
+                    i = facil.index(dato)
+                    facil.insert(i,registro)
+                    break
+                else:
+                    i = facil.index(dato)+1
+                    if registro not in facil:
+                        facil.insert(i,registro)
 
         if modo == 2:
-            intermedio.append(registro)
+            for dato in intermedio:
+                ds = int(dato[1][-2:])
+                dm = int(dato[1][-5:-3])
+                dh = int(dato[1][:-6])
+
+                rs = int(registro[1][-2:])
+                rm = int(registro[1][-5:-3])
+                rh = int(registro[1][:-6])
+
+                # pasa a segundos los tiempos para cmompararlos
+                dss = ds+(dm*60)+(dh*3600)
+                rss = rs+(rm*60)+(rh*3600)
+
+                if rss<=dss:
+                    i = intermedio.index(dato)
+                    intermedio.insert(i,registro)
+                    break
+                else:
+                    i = intermedio.index(dato)+1
+                    if registro not in intermedio:
+                        intermedio.insert(i,registro)
 
         if modo == 3:
-            dificil.append(registro) 
+            for dato in dificil:
+                ds = int(dato[1][-2:])
+                dm = int(dato[1][-5:-3])
+                dh = int(dato[1][:-6])
+
+                rs = int(registro[1][-2:])
+                rm = int(registro[1][-5:-3])
+                rh = int(registro[1][:-6])
+
+                # pasa a segundos los tiempos para cmompararlos
+                dss = ds+(dm*60)+(dh*3600)
+                rss = rs+(rm*60)+(rh*3600)
+
+                if rss<=dss:
+                    i = dificil.index(dato)
+                    dificil.insert(i,registro)
+                    break
+                else:
+                    i = dificil.index(dato)+1
+                    if registro not in dificil:
+                        dificil.insert(i,registro) 
 
         archivo = open('futoshiki2020top10.dat',"wb")
         pickle.dump(facil,archivo)
@@ -1185,25 +1384,6 @@ def datos_partida_arch():
         pickle.dump(dificil,archivo)
 
         archivo.close() 
-
-
-##def top10_pila_aux(lista,dato,cont):
-##
-##    if cont == 10:
-##        return []
-##
-##    else:
-##        ds = int(datos[2][-2:])
-##        dm = int(datos[2][-5:-3])
-##        dh = int(datos[2][:-6])
-##
-##        rs = int(registro[2][-2:])
-##        rm = int(registro[2][-5:-3])
-##        rh = int(registro[2][:-6])
-##
-##        # pasa a segundos los tiempos para cmompararlos
-##        dss = ds+(dm*60)+(dh*3600)
-##        rss = rs+(rm*60)+(rh*3600)
 
 
 def top10_ventana():
@@ -1257,11 +1437,12 @@ def top10_ventana():
         archivo.close()
 
         if facil!=[]:
+            posicion_label(190,50,facil)
             f = 210
             c = 50
             for dato in facil:
                 label_dato1 = Label(ventana_top,text=str(dato[0]),font=("",10),fg='red',bg=main_color)
-                label_dato2 = Label(ventana_top,text=str(dato[2]),font=("",10),fg='red',bg=main_color)
+                label_dato2 = Label(ventana_top,text=str(dato[1]),font=("",10),fg='red',bg=main_color)
 
                 label_dato1.place(x=f,y=c)
                 label_dato2.place(x=f+160,y=c)
@@ -1271,13 +1452,17 @@ def top10_ventana():
                 i = facil.index(dato) # se detiene de colocar los labels cuando el indice sea 9
                 if i == 9:
                     break
+        else:
+            label = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+            label.place(x=10,y=55)
 
         if intermedio!=[]:
+            posicion_label(190,305,intermedio)
             f = 210
             c = 305
             for dato in intermedio:
                 label_dato1 = Label(ventana_top,text=str(dato[0]),font=("",10),fg='red',bg=main_color)
-                label_dato2 = Label(ventana_top,text=str(dato[2]),font=("",10),fg='red',bg=main_color)
+                label_dato2 = Label(ventana_top,text=str(dato[1]),font=("",10),fg='red',bg=main_color)
 
                 label_dato1.place(x=f,y=c)
                 label_dato2.place(x=f+160,y=c)
@@ -1288,12 +1473,17 @@ def top10_ventana():
                 if i == 9:
                     break
 
+        else:
+            label = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+            label.place(x=10,y=310)
+
         if dificil!=[]:
+            posicion_label(190,585,dificil)
             f = 210
             c = 585
             for dato in dificil:
                 label_dato1 = Label(ventana_top,text=str(dato[0]),font=("",10),fg='red',bg=main_color)
-                label_dato2 = Label(ventana_top,text=str(dato[2]),font=("",10),fg='red',bg=main_color)
+                label_dato2 = Label(ventana_top,text=str(dato[1]),font=("",10),fg='red',bg=main_color)
 
                 label_dato1.place(x=f,y=c)
                 label_dato2.place(x=f+160,y=c)
@@ -1303,16 +1493,172 @@ def top10_ventana():
                 i = dificil.index(dato)
                 if i == 9:
                     break
-            
 
-    b_continuar = Button(ventana_top,text="Continuar jugando",bg = color2,command = volver3)
-    b_continuar.place(x=550,y=730)
+        else:
+            label = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+            label.place(x=10,y=590)
+            
+    label1 = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+    label1.place(x=10,y=55)
+    
+    label2 = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+    label2.place(x=10,y=310)
+            
+    label3 = Label(ventana_top,text="NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL",bg = main_color,fg='red',font=('',10))
+    label3.place(x=10,y=590)
+    
+    b_continuar = Button(ventana_top,text="Continuar jugando",width = 15,bg = color2,command = volver3)
+    b_continuar.place(x=545,y=730)
+
+    b_imprimir = Button(ventana_top,text="Imprimir ",bg=color2,width = 15, command=imprimir_top)
+    b_imprimir.place(x=545,y=680)
 
     ventana_top.mainloop()
+    
 
-    # enumerate cuando ya esten ordenados y listos para desplegar
+def posicion_label(f,c,nivel):
+    # coloca los numeros del top en la ventana
+    for i in range(1,11):
+        label = Label(ventana_top,text=str(i)+'.',font=("",10),bg=main_color)
+        label.place(x=f,y=c)
+        c += 20
+        if i == len(nivel):
+            break
+   
 
+def imprimir_top():
+    #crea un archivo pdf del top10 de cada nivel
+    #cada nivel se despiega en una pagina diferente
 
+    file = FPDF()
+    file.add_page()
+    file.set_font('Arial','B',16)
+    file.text(85,20,'Top 10 Futoshiki')
+    file.ln(20) # line break
+
+    if path.exists('futoshiki2020top10.dat'):
+        archivo = open('futoshiki2020top10.dat',"rb")
+
+        facil = pickle.load(archivo)
+        intermedio = pickle.load(archivo)
+        dificil = pickle.load(archivo)    
+        archivo.close()
+
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Fácil')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)
+
+        if facil == []:
+            file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+        else:
+            x = 10
+            y = 60
+            pos = 1
+            for dato in facil:
+                file.text(x,y,str(pos)+'. '+str(dato[0]))
+                file.text(x+55,y,str(dato[1]))
+                y += 10
+                pos += 1
+                i = facil.index(dato)
+                if i == 9:
+                    break
+
+        agrega_pagina_formato(file)
+        
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Intermedio')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)
+        
+        if intermedio == []:
+            file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+
+        else:
+            x = 10
+            y = 60
+            pos = 1
+            for dato in intermedio:
+                file.text(x,y,str(pos)+'. '+str(dato[0]))
+                file.text(x+55,y,str(dato[1]))
+                y += 10
+                pos += 1
+                i = intermedio.index(dato)
+                if i == 9:
+                    break
+
+        agrega_pagina_formato(file)
+        
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Difícil')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)    
+
+        if dificil == []:
+            file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+
+        else:
+            x = 10
+            y = 60
+            pos = 1
+            for dato in dificil:
+                file.text(x,y,str(pos)+'. '+str(dato[0]))
+                file.text(x+55,y,str(dato[1]))
+                y += 10
+                pos += 1
+                i = dificil.index(dato)
+                if i == 9:
+                    break
+        
+            
+    else:
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Fácil')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)
+        file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+
+        agrega_pagina_formato(file)
+
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Intermedio')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)
+        file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+
+        
+        agrega_pagina_formato(file)
+
+        file.set_font('Arial','B',14)
+        file.write(10,'Nivel Difícil')
+
+        file.set_font('Arial','',14)
+        file.text(10,50,'Jugador                           Tiempo')
+        file.ln(20)
+        file.text(10,60,'NO HAY REGISTRO DE JUGADORES EN ESTE NIVEL')
+
+    # guarda y abre documento      
+    file.output('Top10_Futoshiki.pdf','F')
+    os.startfile('Top10_Futoshiki.pdf')
+        
+
+def agrega_pagina_formato(file):
+
+    file.add_page()
+    file.set_font('Arial','B',16)
+    file.text(85,20,'Top 10 Futoshiki')
+    file.ln(20) # line break
+    
     
 def volver3(): 
     global paused
@@ -1347,6 +1693,7 @@ def pausas(): # controla las pausas y continua con el reloj respectivo
     if reloj == 3:
         timer()
 
+
 def volver2():
     ventana_jugar.withdraw()
     principal.deiconify()
@@ -1359,6 +1706,7 @@ def guardar():
     global segundos,minutos,horas
     global paused
     global guardado
+    global modo
     # lee archivo de configuracion
     archivo = open("futoshiki2020juegoactual.dat","wb")
 
@@ -1374,6 +1722,9 @@ def guardar():
         m = int(proceso[-5:-3])
         h = int(proceso[:-6])
 
+    if multinivel:
+        modo = 4
+
     name = nombre
     mod = modo
     r = reloj
@@ -1387,6 +1738,7 @@ def guardar():
     par = partida
     lp = lista_partida
     lm = lista_movimientos
+    lr = jugadas_borradas
 
     
     pickle.dump(name, archivo)
@@ -1402,7 +1754,7 @@ def guardar():
     pickle.dump(par,archivo)
     pickle.dump(lp,archivo)
     pickle.dump(lm,archivo)
-    
+    pickle.dump(lr,archivo)
 
     archivo.close()
     guardado = True
