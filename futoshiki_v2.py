@@ -2108,7 +2108,7 @@ def acercade():
     label1 = Label(frame,text="Nombre del Programa: Futoshiki",bg = "peach puff",font=(None,15))
     label2 = Label(frame,text="Autora: Alexia Cerdas Aguilar",bg = "peach puff",font=(None,15))
     label3 = Label(frame,text="Fecha creación: 30/6/20",bg = "peach puff",font=(None,15))
-    label4 = Label(frame,text="Versión: 1.0.0",bg = "peach puff",font=(None,15))
+    label4 = Label(frame,text="Versión: 2.0.0",bg = "peach puff",font=(None,15))
 
     label1.grid(row=0,pady=12,padx=5)
     label2.grid(row=1,pady=12,padx=5)
