@@ -1593,8 +1593,8 @@ def posicion_label(f,c,nivel):
 
 
 def imprimir_top():
-    #crea un archivo pdf del top10 de cada nivel
-    #cada nivel se despiega en una pagina diferente
+    #crea un archivo pdf del top10
+    #cada nivel se despliega en una pagina diferente
 
     file = FPDF()
     file.add_page()
